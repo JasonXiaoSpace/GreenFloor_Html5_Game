@@ -1,25 +1,9 @@
 namespace flow{
     export class DefaultSubjectFlow implements ISubjectFlow
     {
+        //----------------数量
         private _subjectsNum            :number ;
-        private _curSubjectIndex        :number;
-        private _allSubjects            :ISubjectVO[];
-
-        private _running                :boolean ;
-        private _responder              :ISubjectFlowResponder ;
-
         private _numPerGroup            :number = 0 ;//每组里有多少题
-
-        //关于时间
-        private _startTime              :number ;
-        private _lastTime               :number ;
-        private _pauseTime              :number ;
-        private _pauseDuration          :number ;
-        private _givenTime              :number ;
-
-        private _redoCountDict          :{[id:string]:number} ;
-
-        //数量
         public getSubjectsNum():number {
             return this._subjectsNum ;
         }
@@ -41,22 +25,8 @@ namespace flow{
         }
 
 
-        //序号
-        public getCurSubjectIndex():number{
-            return this._curSubjectIndex ;
-        }
-
-        public getCurSubjectIndexInGroup():number{
-            if( this._perNumPerGroup == 0 ) return this._curSubjectIndex ;
-            return Math.floor( this._curSubjectIndex % this._perNumPerGroup ) ;
-        }
-
-        public getCurGroupIndex():number{
-            if( this._perNumPerGroup == 0 ) return 0 ;
-            return Math.floor( this._curSubjectIndex / this._perNumPerGroup ) ;
-        }
-
-        //vo
+        //--------------------vos----------------------------
+        private _allSubjects            :ISubjectVO[];
         public getAllSubjects():ISubjectVO[]{
             return this._allSubjects ;
         }
@@ -77,10 +47,54 @@ namespace flow{
         }
 
 
-        //状态
+
+        //------------------时间---------------------------------
+        private _startTime              :number ;
+        private _lastTime               :number ;
+        private _pauseTime              :number ;
+        private _pauseDuration          :number ;
+        private _givenTime              :number ;
+
+
+
+        //----------------状态-------------------------------------------
+        private _curSubjectIndex        :number;
+        private _running                :boolean ;
         public getRunning():boolean{
             return this._running ;
         }
+
+
+
+        //---------------------序号-----------------------------------------
+        public getCurSubjectIndex():number{
+            return this._curSubjectIndex ;
+        }
+
+        public getCurSubjectIndexInGroup():number{
+            if( this._perNumPerGroup == 0 ) return this._curSubjectIndex ;
+            return Math.floor( this._curSubjectIndex % this._perNumPerGroup ) ;
+        }
+
+        public getCurGroupIndex():number{
+            if( this._perNumPerGroup == 0 ) return 0 ;
+            return Math.floor( this._curSubjectIndex / this._perNumPerGroup ) ;
+        }
+
+
+
+        //---------------------存储-------------------------------------
+        private _redoCountDict          :{[id:string]:number} ;
+
+
+
+        //---------------------UI----------------------------------------------
+        private _responder              :ISubjectFlowResponder ;
+
+
+
+
+
 
         //开始 flow流程，这是总的开始方法
         public  start( subjects:ISubjectVO[], responder:ISubjectFlowResponder, index?:number):void{
@@ -113,34 +127,6 @@ namespace flow{
             }
         }
 
-        public  pause():void{
-            if( this._running ){
-                ticker.ticker.remove( this.onTicker, this ) ;//如何访问 ticker.ticker 的?
-                this._running = false ; //设置running的状态
-                this._pauseTime = new Date().getDate() ; //记录暂停时刻
-            }
-        }
-
-        public  resume():void{
-            if( !this._running){
-                var delta:number = new Date().getTime() - this._pauseTime ;//记录暂停间隔时间
-                this._pauseDuration += delta ; //记录累计暂停时长
-                this._lastTime += delta ;//将上一次Tick的时刻向后推移 不懂
-                ticker.ticker.add( this.onTicker, this ) ;
-                this._running = true ;
-            }
-        }
-
-        public  stop():void{
-            this.pause() ;
-            this._curSubjectIndex = 0 ;
-            this._startTime = 0 ;
-            this._lastTime = 0 ;
-            this._pauseTime = 0 ;
-            this._pauseDuration = 0 ;
-            this._givenTime = 0 ;
-        }
-
         //subject 时间到了其实并不意味着题一定做错，因为这些isCorrect不是合适的写法
         public onSubjectFinish( isCorrect:boolean ):void{
             if( this._running ){
@@ -152,22 +138,6 @@ namespace flow{
                 }
                 this.nextSubject() ;
             }
-        }
-
-        public redoCurSubject():void{
-            if( this._running ){
-                //增加重做次数
-                var vo:ISubjectVO = this.getCurSubject() ;
-                this._redoCountDict[ vo.id ] = this.getRedoTimes( vo ) + 1 ;//这步有点弱智
-                //重做当前题
-                this.startCurSubject() ;
-            }
-        }
-
-
-        public constructor()
-        {
-
         }
 
         /**准备跳到下一题*/
@@ -184,6 +154,7 @@ namespace flow{
             }
         }
 
+        /**判断是不是组的结束*/
         private judgeGroupEnd():void
         {
             if( this._numPerGroup > 0 && this._curSubjectIndex >= 0 && this.getCurSubjectIndexInGroup() == this._numPerGroup - 1 ){
@@ -197,6 +168,7 @@ namespace flow{
             }
         }
 
+        /**判断是不是flow结束，如果不是，开始一个新组*/
         private judgeFlowEnd():void
         {
             if( this._curSubjectIndex >= this.getSubjectsNum() - 1 ){
@@ -215,6 +187,7 @@ namespace flow{
             }
         }
 
+        /**开始一个新题*/
         private startCurSubject():void{
             var self:DefaultSubjectFlow = this ;
             if( this._responder != null && this._responder.onSubjectStart!=null && this.getCurSubject()!= null){
@@ -269,5 +242,47 @@ namespace flow{
         }
 
 
+        public  pause():void{
+            if( this._running ){
+                ticker.ticker.remove( this.onTicker, this ) ;//如何访问 ticker.ticker 的?
+                this._running = false ; //设置running的状态
+                this._pauseTime = new Date().getDate() ; //记录暂停时刻
+            }
+        }
+
+        public  resume():void{
+            if( !this._running){
+                var delta:number = new Date().getTime() - this._pauseTime ;//记录暂停间隔时间
+                this._pauseDuration += delta ; //记录累计暂停时长
+                this._lastTime += delta ;//将上一次Tick的时刻向后推移 不懂
+                ticker.ticker.add( this.onTicker, this ) ;
+                this._running = true ;
+            }
+        }
+
+        public  stop():void{
+            this.pause() ;
+            this._curSubjectIndex = 0 ;
+            this._startTime = 0 ;
+            this._lastTime = 0 ;
+            this._pauseTime = 0 ;
+            this._pauseDuration = 0 ;
+            this._givenTime = 0 ;
+        }
+
+        public redoCurSubject():void{
+            if( this._running ){
+                //增加重做次数
+                var vo:ISubjectVO = this.getCurSubject() ;
+                this._redoCountDict[ vo.id ] = this.getRedoTimes( vo ) + 1 ;//这步有点弱智
+                //重做当前题
+                this.startCurSubject() ;
+            }
+        }
+
+        public constructor()
+        {
+
+        }
     }
 }
