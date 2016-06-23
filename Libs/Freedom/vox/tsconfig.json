@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es3",
+    "sourceMap": true,
+    "outFile": "Freedom.js"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
