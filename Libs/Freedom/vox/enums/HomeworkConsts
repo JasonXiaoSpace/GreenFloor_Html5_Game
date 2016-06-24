@@ -1,0 +1,17 @@
+namespace vox.enums
+{
+    export enum Subject{
+        English,
+        Math,
+        Chinese
+    }
+
+    export enum StudyType{
+        Homework,
+        SelfStudy,
+        VacationHomework,
+        Quiz,
+        Oral,
+        Afenti
+    }
+}
