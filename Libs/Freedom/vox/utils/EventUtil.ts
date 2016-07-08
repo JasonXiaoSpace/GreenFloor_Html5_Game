@@ -7,7 +7,7 @@ namespace vox.utils
             $(target).trigger( type, args ) ;
         }
 
-        public static addEventListener( target:Object, type:string, handler:vox.intefaces.EventHandler):void
+        public static addEventListener( target:Object, type:string, handler:vox.intefaces.IEventHandler):void
         {
             if( target != null && type != null && type != "")
             {
@@ -15,7 +15,7 @@ namespace vox.utils
             }
         }
 
-        public static removeEventHandler( target:Object, type:string, handler:vox.intefaces.EventHandler):void
+        public static removeEventHandler( target:Object, type:string, handler:vox.intefaces.IEventHandler):void
         {
             if( target != null && type != null && type != "")
             {

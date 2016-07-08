@@ -1,6 +1,6 @@
 namespace vox.intefaces
 {
-    export interface Executable
+    export interface IExecutable
     {
         /**执行方法*/
         exec():void ;

@@ -1,5 +1,5 @@
 namespace vox.intefaces{
-    export interface EventHandler{
+    export interface IEventHandler{
         (event:Event, ...args ):void ;
     }
 }

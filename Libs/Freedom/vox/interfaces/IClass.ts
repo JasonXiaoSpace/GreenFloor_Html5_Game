@@ -1,5 +1,5 @@
 namespace  vox.intefaces{
-    export interface Class{
+    export interface IClass{
         new (...args:any[]):any ;
         toString():string ;
     }

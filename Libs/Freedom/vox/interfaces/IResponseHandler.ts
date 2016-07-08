@@ -1,7 +1,7 @@
 namespace vox.intefaces
 {
     import BaseMessageType = vox.net.BaseMessageType;
-    export  interface ResponseHandler
+    export interface IResponseHandler
     {
         ( responseOrError ?:BaseMessageType,request?)
     }
