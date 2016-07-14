@@ -2155,47 +2155,294 @@ var vox;
         utils.URLUtils = URLUtils;
     })(utils = vox.utils || (vox.utils = {}));
 })(vox || (vox = {}));
+/// <reference path="StateContext.ts"/>
+/// <reference path="State.ts"/>
 var vox;
 (function (vox) {
     var utils;
     (function (utils) {
         var statemachine;
         (function (statemachine) {
+            /**
+             * 功能: 状态机
+             * <br>
+             * 版权: ©Raykid
+             * <br>
+             * 作者: Raykid
+             */
+            var StateMachine = (function () {
+                function StateMachine() {
+                    this._states = [];
+                    this._running = false;
+                    this._pause = false;
+                    this._pauseData = null;
+                    this._tempUserData = {};
+                    /** 是否在添加状态时自动立即运行状态机，默认为false */
+                    this.autoRun = false;
+                    this._context = new statemachine.StateContext(this);
+                }
+                /** 获取状态机当前是否正在运行 */
+                StateMachine.prototype.getRunning = function () {
+                    return this._running;
+                };
+                /** 获取用户数据，可以修改其中的值，这些值在状态机一次生命周期中会一直奏效 */
+                StateMachine.prototype.getUserData = function () {
+                    return this._context.getUserData();
+                };
+                StateMachine.prototype.onUpdate = function (delta) {
+                    // 调用当前状态的onUpdate方法，并把毫秒间隔传递过去
+                    this._states[0].onUpdate(this._context, delta);
+                };
+                StateMachine.prototype.addUserData = function (key, value) {
+                    if (this._context != null)
+                        this._context.getUserData()[key] = value;
+                    else
+                        this._tempUserData[key] = value;
+                };
+                /**
+                 * 添加一个或多个状态
+                 * @param state 要添加的状态
+                 * @param more 可能要添加的更多状态
+                 * @return 返回当前状态数量
+                 */
+                StateMachine.prototype.add = function (state) {
+                    var more = [];
+                    for (var _i = 1; _i < arguments.length; _i++) {
+                        more[_i - 1] = arguments[_i];
+                    }
+                    more.unshift(state);
+                    for (var i = 0, len = more.length; i < len; i++) {
+                        var temp = more[i];
+                        if (temp != null) {
+                            this._states.push(temp); //添加state到_states里
+                            temp.onAdd(this._context); //把context添加给state
+                        }
+                    }
+                    if (this._pause && this.autoRun)
+                        this.resume(); //如果当前是暂停的，且是自己开始的，则一添加就自动开始
+                    return this._states.length;
+                };
+                /**
+                 * 弹出当前的状态 并且去执行后面的状态
+                 * @param state 要结束的状态，必须与当前状态吻合才会奏效。如果传递null则默认是结束当前状态（慎用）
+                 * @return 弹出的状态
+                 */
+                StateMachine.prototype.shift = function (state) {
+                    if (this._states.length == 0)
+                        return null;
+                    var stateExit = this._states[0];
+                    if (state != null && stateExit != state)
+                        return null;
+                    // 调用onExit方法，获得传递给下一个状态的参数，这个参数是来自于调用State constructor里面callback的返回
+                    var data = stateExit.onExit(this._context);
+                    // 调用onRemove方法，并且将该状态移除掉， 这个参数是来自于调用State constructor里面callback的->置为 null
+                    stateExit.onRemove(this._context);
+                    this._states.shift(); //移除_states里第一个状态
+                    if (this._pause) {
+                        // 如果有暂停，则暂时停止执行下一个状态
+                        this._pauseData = data;
+                    }
+                    else if (this._states.length == 0) {
+                        // 已经没有下一个状态了，自动暂停状态机
+                        this.pause();
+                        this._pauseData = data;
+                    }
+                    else {
+                        // 准备进入下一个状态：
+                        // 还有下一个状态。如果需要跳过，则直接跳过该状态进入下一个状态，否则进入该状态
+                        var entered = false;
+                        for (var i = 0, len = this._states.length; i < len; i++) {
+                            var stateEnter = this._states[0];
+                            if (!this._context.skip || !stateEnter.skippable()) {
+                                entered = true;
+                                stateEnter.onEnter(this._context, data);
+                                break;
+                            }
+                            this._states.shift();
+                        }
+                        // 如果跳过了所有状态，则自动暂停状态机
+                        if (!entered) {
+                            this.pause();
+                            this._pauseData = data;
+                        }
+                    }
+                    return stateExit;
+                };
+                /**
+                 * 手动pass掉当前状态，直接进入下一状态
+                 * @param forceFinish 是否在pass掉状态时直接完成该状态
+                 * @return 被pass掉的状态
+                 */
+                StateMachine.prototype.pass = function (forceFinish) {
+                    if (this._states.length == 0)
+                        return null;
+                    var state = this._states[0];
+                    var manualDelete = state.onPass(this._context, forceFinish);
+                    if (!manualDelete)
+                        this.shift(state);
+                    return state;
+                };
+                /** 启动状态机 */
+                StateMachine.prototype.start = function () {
+                    if (!this._running) {
+                        // 拷贝所有参数
+                        for (var key in this._tempUserData) {
+                            this._context.getUserData()[key] = this._tempUserData[key];
+                            delete this._tempUserData[key];
+                        }
+                        this._running = true;
+                        if (this._states.length > 0) {
+                            // 进入第一个状态
+                            this._states[0].onEnter(this._context, null);
+                            // resume
+                            this.resume();
+                        }
+                        else {
+                            this.pause();
+                        }
+                    }
+                };
+                /** 停止状态机 */
+                StateMachine.prototype.stop = function () {
+                    if (this._running) {
+                        // 调用第一个状态的onExit方法
+                        if (this._states.length > 0)
+                            this._states[0].onExit(this._context);
+                        this._running = false;
+                        // 销毁上下文
+                        this._context.clear();
+                        // 恢复暂停状态
+                        this._pause = false;
+                        this._pauseData = null;
+                    }
+                };
+                /** 暂停在当前状态 */
+                StateMachine.prototype.pause = function () {
+                    this._pause = true;
+                };
+                /** 重新开启 */
+                StateMachine.prototype.resume = function () {
+                    if (this._pause && this._states.length > 0) {
+                        this._pause = false;
+                        // 还有下一个状态，进入下一个状态
+                        var stateEnter = this._states[0];
+                        var data = this._pauseData;
+                        this._pauseData = null;
+                        stateEnter.onEnter(this._context, data);
+                    }
+                };
+                /** 跳过所有状态 */
+                StateMachine.prototype.skipAllStates = function () {
+                    this._context.skip = true;
+                };
+                /** 清理所有状态 */
+                StateMachine.prototype.clear = function () {
+                    this.stop();
+                    // 移除掉所有状态
+                    for (var i = 0, len = this._states.length; i < len; i++) {
+                        // 调用onRemove方法，并且将该状态移除掉
+                        this._states[0].onRemove(this._context);
+                        this._states.shift();
+                    }
+                };
+                /**
+                 * 托管状态机，如果状态内有需要update的状态，就需要托管。如果没有则可以不托管
+                 * @param stateMachine 要托管的状态机
+                 */
+                StateMachine.delegateStateMachine = function (stateMachine) {
+                    if (StateMachine._stateMachines.indexOf(stateMachine) < 0)
+                        StateMachine._stateMachines.push(stateMachine);
+                    if (!StateMachine._updating) {
+                        PIXI.ticker.shared.add(StateMachine.onEnterFrame);
+                        StateMachine._lastTime = new Date().getTime();
+                        StateMachine._updating = true;
+                    }
+                };
+                /**
+                 * 取消托管状态机
+                 * @param stateMachine 要取消托管的状态机
+                 */
+                StateMachine.undelegateStateMachine = function (stateMachine) {
+                    var index = StateMachine._stateMachines.indexOf(stateMachine);
+                    if (index >= 0)
+                        StateMachine._stateMachines.splice(index, 1);
+                    if (StateMachine._updating) {
+                        PIXI.ticker.shared.remove(StateMachine.onEnterFrame);
+                        StateMachine._lastTime = 0;
+                        StateMachine._updating = false;
+                    }
+                };
+                StateMachine.onEnterFrame = function (deltaTime) {
+                    // 计算毫秒间隔
+                    var time = new Date().getTime();
+                    var delta = time - StateMachine._lastTime;
+                    StateMachine._lastTime = time;
+                    // 调用每一个已启动的状态机的onUpdate方法，将毫秒间隔传递过去
+                    for (var i = 0, len = StateMachine._stateMachines.length; i < len; i++) {
+                        var stateMachine = StateMachine._stateMachines[i];
+                        if (stateMachine.getRunning())
+                            stateMachine.onUpdate(delta);
+                    }
+                };
+                StateMachine._stateMachines = [];
+                StateMachine._updating = false;
+                return StateMachine;
+            })();
+            statemachine.StateMachine = StateMachine;
+        })(statemachine = utils.statemachine || (utils.statemachine = {}));
+    })(utils = vox.utils || (vox.utils = {}));
+})(vox || (vox = {}));
+/// <reference path="StateMachine.ts"/>
+/// <reference path="State.ts"/>
+var vox;
+(function (vox) {
+    var utils;
+    (function (utils) {
+        var statemachine;
+        (function (statemachine) {
+            /**
+             * 功能: 状态机一个生命周期内的上下文
+             * <br>
+             * 版权: ©Raykid
+             * <br>
+             * 作者: Raykid
+             */
             var StateContext = (function () {
                 function StateContext(stateMachine) {
                     this._userData = {};
-                    /**获取或设置是否跳过剩余可跳过的状态*/
+                    /** 获取或设置是否跳过剩余可跳过的状态 */
                     this.skip = false;
                     this._stateMachine = stateMachine;
                 }
-                /**在一个状态机生命周期中可以保存任意数据，状态机生命周期结束后将被销毁*/
-                StateContext.prototype.getUserData = function () {
-                    return this._userData;
-                };
-                /**获取或调协状态机自动运行状态*/
-                StateContext.prototype.getAutoRun = function () {
-                    return this._stateMachine.autoRun;
-                };
-                StateContext.prototype.setAutoRun = function (value) {
-                    this._stateMachine.autoRun = value;
-                };
-                /**添加一个或多个状态到当前状态机，该方法为状态提供在运行时动态增加机状态的机会
+                /** 在一个状态机生命周期中可以保存任意数据，状态机生命周期结束后将被销毁 */
+                StateContext.prototype.getUserData = function () { return this._userData; };
+                /** 获取或设置状态机自动运行状态 */
+                StateContext.prototype.getAutoRun = function () { return this._stateMachine.autoRun; };
+                StateContext.prototype.setAutoRun = function (value) { this._stateMachine.autoRun = value; };
+                /**
+                 * 添加一个或多个状态到当前状态机，该方法为状态提供在运行时动态增加状态机状态的机会
                  * @param state 要添加的状态
                  * @param more 可能要添加的更多状态
-                 * @param 返回当前状态的数据*/
+                 * @return 返回当前状态数量
+                 */
                 StateContext.prototype.addState = function (state) {
                     var more = [];
                     for (var _i = 1; _i < arguments.length; _i++) {
                         more[_i - 1] = arguments[_i];
                     }
                     more.unshift(state);
+                    //添加state到状态机的_states里面, 并且把_context置给state, 返回_states长度
                     return this._stateMachine.add.apply(this._stateMachine, more);
                 };
-                /**当需要结束状态时调用该方法即可
-                 * @param state 要结束的状态，必须与当前状态吻合才会奏效，如果传递null, 则默认是结束当前状态(慎用)*/
+                /**
+                 * 当需要结束状态时调用该方法即可
+                 * @param state 要结束的状态，必须与当前状态吻合才会奏效。如果传递null则默认是结束当前状态（慎用）
+                 */
                 StateContext.prototype.finish = function (state) {
+                    // 之所以要用setTimeout，是因为防止堆栈溢出
                     setTimeout(this._stateMachine.shift, 0, state);
                 };
+                /** 清理状态机上下文对象 */
                 StateContext.prototype.clear = function () {
                     for (var key in this._userData) {
                         delete this._userData[key];
@@ -2207,79 +2454,8 @@ var vox;
         })(statemachine = utils.statemachine || (utils.statemachine = {}));
     })(utils = vox.utils || (vox.utils = {}));
 })(vox || (vox = {}));
-var vox;
-(function (vox) {
-    var utils;
-    (function (utils) {
-        var statemachine;
-        (function (statemachine) {
-            var StateMachine = (function () {
-                function StateMachine() {
-                    this._states = [];
-                    this._running = false;
-                    this._pause = false;
-                    this.autoRun = false;
-                    this._pauseData = null;
-                    this._tempUserData = {};
-                }
-                StateMachine.prototype.getRunning = function () {
-                    return this._running;
-                };
-                StateMachine.prototype.getUserData = function () {
-                    return this._context.getUserData();
-                };
-                StateMachine.prototype.add = function (state) {
-                    var more = [];
-                    for (var _i = 1; _i < arguments.length; _i++) {
-                        more[_i - 1] = arguments[_i];
-                    }
-                    more.unshift(state);
-                    for (var i = 0, len = more.length; i < len; i++) {
-                        var tmp = more[i];
-                        if (tmp != null) {
-                            this._states.push(tmp);
-                            tmp.onAdd(this._context);
-                        }
-                    }
-                    if (this._pause && this.autoRun) {
-                        this.resume();
-                    }
-                    return this._states.length;
-                };
-                StateMachine.prototype.shift = function (state) {
-                    if (this._states.length == 0)
-                        return null;
-                    var stateExit = this._states[0];
-                    if (state != null && stateExit != state)
-                        return null;
-                    var data = stateExit.onExit(this._context);
-                    stateExit.onRemove(this._context);
-                    this._states.shift();
-                    if (this._pause) {
-                        this._pauseData = data;
-                    }
-                    else if (this._states.length == 0) {
-                        this.pause();
-                    }
-                };
-                StateMachine.prototype.pass = function (forceFinish) {
-                    if (this._states.length == 0)
-                        return null;
-                    var state = this._states[0];
-                    var manualDelete = state.onPass(this._context, forceFinish);
-                    if (!manualDelete)
-                        this.shift(state);
-                    return state;
-                };
-                /**启动状态机*/
-                StateMachine.prototype.start = function () {
-                };
-                return StateMachine;
-            })();
-            statemachine.StateMachine = StateMachine;
-        })(statemachine = utils.statemachine || (utils.statemachine = {}));
-    })(utils = vox.utils || (vox.utils = {}));
-})(vox || (vox = {}));
+/// <reference path="../State.ts"/>
+/// <reference path="../StateContext.ts"/>
 var vox;
 (function (vox) {
     var utils;
@@ -2288,6 +2464,13 @@ var vox;
         (function (statemachine) {
             var states;
             (function (states) {
+                /**
+                 * 功能: 可以用来执行一个方法的状态，可以将方法返回值传递给下一个状态
+                 * <br>
+                 * 版权: ©Raykid
+                 * <br>
+                 * 作者: Raykid
+                 */
                 var FunctionState = (function () {
                     function FunctionState(callback, thisArg) {
                         var args = [];
@@ -2316,6 +2499,7 @@ var vox;
                         return false;
                     };
                     FunctionState.prototype.onExit = function (context) {
+                        // 将方法返回值传递给下一个状态
                         return this._returnValue;
                     };
                     FunctionState.prototype.onRemove = function (context) {
