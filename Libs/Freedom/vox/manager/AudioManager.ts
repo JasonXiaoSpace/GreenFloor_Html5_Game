@@ -1,13 +1,6 @@
 namespace vox.manager{
     import ContextManager = vox.context.ContextManager;
     import IExternal = vox.external.IExternal;
-    import ContextManager = vox.context.ContextManager;
-    import ContextManager = vox.context.ContextManager;
-    import ContextManager = vox.context.ContextManager;
-    import ContextManager = vox.context.ContextManager;
-    import ContextManager = vox.context.ContextManager;
-    import IExternal = vox.external.IExternal;
-    import ContextManager = vox.context.ContextManager;
     export class AudioManager{
         private static _bgMusicUrl:string;
         private static _bgMusicPlaying:boolean = false ;

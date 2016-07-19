@@ -15,5 +15,8 @@ namespace vox.events{
         public static Evt_StartLoadModule             :string = "Evt_StartLoadModule" ;
         public static Evt_LoadModuleComplete          :string = "Evt_LoadModuleComplete" ;
         public static Evt_LoadModuleFail              :string = "Evt_LoadModuleFail" ;
+
+        public static Evt_ShowPopup                   :string = "Evt_ShowPopup" ;
+        public static Evt_ClosePopup                  :string = "Evt_ClosePopup" ;
     }
 }

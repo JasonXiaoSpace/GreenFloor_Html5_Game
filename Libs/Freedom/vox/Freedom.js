@@ -532,6 +532,8 @@ var vox;
             AppEvent.Evt_StartLoadModule = "Evt_StartLoadModule";
             AppEvent.Evt_LoadModuleComplete = "Evt_LoadModuleComplete";
             AppEvent.Evt_LoadModuleFail = "Evt_LoadModuleFail";
+            AppEvent.Evt_ShowPopup = "Evt_ShowPopup";
+            AppEvent.Evt_ClosePopup = "Evt_ClosePopup";
             return AppEvent;
         })();
         events.AppEvent = AppEvent;
@@ -1559,6 +1561,122 @@ var vox;
 })(vox || (vox = {}));
 var vox;
 (function (vox) {
+    var manager;
+    (function (manager) {
+        var NonePopupPolicy = vox.popup.policies.NonePopupPolicy;
+        var ButtonType = vox.popup.ButtonType;
+        var ContextManager = vox.context.ContextManager;
+        var AppEvent = vox.events.AppEvent;
+        var MaskUtil = vox.utils.MaskUtil;
+        var PopupManager = (function () {
+            function PopupManager() {
+            }
+            /*获取当前显示的弹窗的数量*/
+            PopupManager.getCount = function () {
+                return this._popupList.length;
+            };
+            PopupManager.initilize = function (prompt) {
+                PopupManager._prompt = prompt;
+            };
+            /*显示提示窗口*/
+            PopupManager.prompt = function (msg) {
+                var handlers = [];
+                for (var _i = 1; _i < arguments.length; _i++) {
+                    handlers[_i - 1] = arguments[_i];
+                }
+                var args = [msg];
+                for (var i in handlers) {
+                    var handler = handler[i];
+                    if (handler.text == null)
+                        handler.text = handler.data;
+                    if (handler.buttonType == null)
+                        handler.buttonType = ButtonType.Normal;
+                    args.push(handler);
+                }
+                PopupManager._prompt.update.apply(PopupManager._prompt, args); //args里有若干参数，一个是msg, 后面都是IPromptHandler
+                PopupManager.show(PopupManager._prompt);
+            };
+            PopupManager.alert = function (msg, okHandler) {
+                PopupManager.prompt(msg, { data: "确定", handler: okHandler, buttonType: ButtonType.Important });
+            };
+            PopupManager.confirm = function (msg, okHandler, cancelHandler) {
+                PopupManager.prompt(msg, { data: "确定", handler: okHandler, buttonType: ButtonType.Important }, { data: "取消", handler: cancelHandler, buttonType: ButtonType.Normal });
+            };
+            //----------------------------------下面是主方法----------------------------------------
+            /*显示一个弹窗
+            * @param popup 要显示的弹窗
+            * @param isModal 是否是模态弹出，默认值是true
+            * @param from 从该点弹出 (某些弹出策略需要)*/
+            PopupManager.show = function (popup, isModal, from) {
+                if (isModal === void 0) { isModal = true; }
+                var name = popup.getName();
+                //先移除之前的同名弹窗
+                PopupManager.close(name);
+                //记录弹窗
+                PopupManager._popupDict[name] = popup;
+                PopupManager._popupList.push(popup);
+                //获取弹出策略
+                var policy = popup.getPolicy();
+                if (policy == null)
+                    policy = PopupManager.defaultPolicy;
+                if (policy == null)
+                    policy = NonePopupPolicy.getInstance();
+                //调用弹出前方法
+                popup.onBeforeShow();
+                //调用弹出策略
+                policy.show(popup, popup.onAfterShow.bind(popup), from);
+                //如果是模态，则需要遮罩层
+                if (isModal)
+                    MaskUtil; //TODO
+                //派发事件
+                ContextManager.context.dispatch(AppEvent.Evt_ShowPopup, popup);
+            };
+            /*关闭一个弹窗
+            * @param popupOrName 弹窗本身或者弹窗名称
+            * @param to 关闭到该点 （某些弹出策略的需求）*/
+            PopupManager.close = function (popupOrName, to) {
+                var popup = null;
+                var name;
+                if (typeof popupOrName == "string") {
+                    name = popupOrName;
+                    popup = PopupManager._popupDict[name];
+                }
+                else {
+                    popup = popupOrName;
+                    name = popup.getName();
+                }
+                if (popup == null)
+                    return;
+                //获取弹窗策略
+                var policy = popup.getPolicy();
+                if (policy == null)
+                    policy = PopupManager.defaultPolicy;
+                if (policy == null)
+                    policy = NonePopupPolicy.getInstance();
+                //调用弹出前的方法
+                popup.onBeforeClose();
+                //调用弹出策略
+                policy.close(popup, popup.onAfterClose.bind(popup), to);
+                //删除记录
+                delete PopupManager._popupDict[name];
+                var index = PopupManager._popupList.indexOf(popup);
+                if (index >= 0)
+                    PopupManager._popupList.splice(index, 1);
+                //移除遮罩
+                //TODO
+                MaskUtil;
+                //派发事件
+                ContextManager.context.dispatch(AppEvent.Evt_ClosePopup);
+            };
+            PopupManager.defaultPolicy = NonePopupPolicy.getInstance();
+            PopupManager._popupDict = {};
+            return PopupManager;
+        })();
+        manager.PopupManager = PopupManager;
+    })(manager = vox.manager || (vox.manager = {}));
+})(vox || (vox = {}));
+var vox;
+(function (vox) {
     var model;
     (function (model) {
         var ContextManager = vox.external.ContextManager;
@@ -1745,6 +1863,44 @@ var vox;
         }
         net.parseArray = parseArray;
     })(net = vox.net || (vox.net = {}));
+})(vox || (vox = {}));
+var vox;
+(function (vox) {
+    var popup;
+    (function (popup) {
+        (function (ButtonType) {
+            ButtonType[ButtonType["Normal"] = 0] = "Normal";
+            ButtonType[ButtonType["Important"] = 1] = "Important";
+        })(popup.ButtonType || (popup.ButtonType = {}));
+        var ButtonType = popup.ButtonType;
+    })(popup = vox.popup || (vox.popup = {}));
+})(vox || (vox = {}));
+var vox;
+(function (vox) {
+    var popup;
+    (function (popup_1) {
+        var policies;
+        (function (policies) {
+            var NonePopupPolicy = (function () {
+                function NonePopupPolicy() {
+                }
+                NonePopupPolicy.getInstance = function () {
+                    if (NonePopupPolicy._instance == null) {
+                        NonePopupPolicy._instance = new NonePopupPolicy();
+                    }
+                    return NonePopupPolicy._instance;
+                };
+                NonePopupPolicy.prototype.show = function (pop, cbk, form) {
+                    cbk();
+                };
+                NonePopupPolicy.prototype.close = function (popup, cbk, to) {
+                    cbk();
+                };
+                return NonePopupPolicy;
+            })();
+            policies.NonePopupPolicy = NonePopupPolicy;
+        })(policies = popup_1.policies || (popup_1.policies = {}));
+    })(popup = vox.popup || (vox.popup = {}));
 })(vox || (vox = {}));
 var vox;
 (function (vox) {
