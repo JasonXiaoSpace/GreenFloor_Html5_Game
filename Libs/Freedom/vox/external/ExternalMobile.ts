@@ -3,6 +3,8 @@
 
 namespace vox.external
 {
+    import LogUtils = vox.utils.LogUtils;
+    import LogUtils = vox.utils.LogUtils;
     /**
      * 移动端外壳基类
      */
@@ -124,14 +126,14 @@ namespace vox.external
             if (result !== this._symbolExternalNotExsist)
             {
                 LogUtils.log(`[external getInitParams] result: ${result}`);
-
                 var externalParams: any;
                 try
                 {
                     externalParams = JSON.parse(result);
-                } catch (err)
+                }
+                catch (err)
                 {
-                    vox.utils.LogUtil.log(`[external getInitParams] json解析失败: ${err}`);
+                    LogUtils.log(`[external getInitParams] json解析失败: ${err}`);
                     vox.manager.PopupManager.alert(`获取初始参数失败: ${err}`);
                 }
 

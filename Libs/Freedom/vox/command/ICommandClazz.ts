@@ -1,6 +1,6 @@
 namespace vox.command
 {
-    export interface CommandClazz
+    export interface ICommandClazz
     {
         new ():BaseCommand ;
     }

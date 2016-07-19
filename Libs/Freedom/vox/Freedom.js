@@ -55,12 +55,64 @@ var vox;
 (function (vox) {
     var command;
     (function (command) {
+        var InitModuleCommand = (function (_super) {
+            __extends(InitModuleCommand, _super);
+            function InitModuleCommand() {
+                _super.apply(this, arguments);
+            }
+            InitModuleCommand.prototype.exec = function () {
+                if (this.context.initRequestsComplete) {
+                }
+            };
+            return InitModuleCommand;
+        })(command.BaseCommand);
+        command.InitModuleCommand = InitModuleCommand;
+    })(command = vox.command || (vox.command = {}));
+})(vox || (vox = {}));
+var vox;
+(function (vox) {
+    var command;
+    (function (command) {
+        var AudioManager = vox.manager.AudioManager;
+        var ExternalEventManager = vox.manager.ExternalEventManager;
+        var LogUtils = vox.utils.LogUtils;
+        var LogLevel = vox.utils.LogLevel;
         var InitializedCommand = (function (_super) {
             __extends(InitializedCommand, _super);
             function InitializedCommand() {
                 _super.apply(this, arguments);
             }
             InitializedCommand.prototype.exec = function () {
+                AudioManager.initialize();
+                ExternalEventManager.initialize();
+                //如果没有外壳参数，则捏造一个
+                if (window["external"]["getInitParams"] == null) {
+                    window["external"] = {
+                        getInitParam: function () {
+                            return JSON.stringify({ domain: "https://www.test.17zuoye.net" });
+                        },
+                        payOrder: function () {
+                            alert("payOrder");
+                        }
+                    };
+                }
+                //全局错误捕获
+                var appName = this.context.getSystemConfig().app;
+                window.onerror = function (errMsg, scriptURI, lineNumber, columnNumber, errObj) {
+                    LogUtils.remoteLog({
+                        _lv: LogLevel.Err,
+                        module: appName,
+                        op: "window.onerror",
+                        msg: errMsg
+                    }, {
+                        errorMessage: errMsg,
+                        scriptURI: scriptURI,
+                        lineNumber: lineNumber,
+                        columnNumber: columnNumber,
+                        errorObj: errObj,
+                        currentModule: ModuleManager.getCurModule().getName()
+                    });
+                };
             };
             return InitializedCommand;
         })(command.BaseCommand);
@@ -78,9 +130,23 @@ var vox;
         var ExternalPC = vox.external.ExternalPC;
         var EnvCode = vox.system.EnvCode;
         var EventUtil = vox.utils.EventUtil;
+        var ModuleManager = vox.manager.ModuleManager;
         var ContextManager = (function () {
             function ContextManager() {
             }
+            /*初始化Freedom Evolve框架*/
+            ContextManager.initialize = function () {
+                var apps = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    apps[_i - 0] = arguments[_i];
+                }
+                ContextManager._apps = apps;
+                for (var i in apps) {
+                    ContextManager.context;
+                }
+            };
+            /**静态获取ApplicationContext的方式*/
+            ContextManager.context = new ApplicationContext();
             return ContextManager;
         })();
         context.ContextManager = ContextManager;
@@ -115,6 +181,29 @@ var vox;
             };
             ApplicationContext.prototype.getExplorerBigVersion = function () {
                 return this._explorerBigVersion;
+            };
+            ApplicationContext.prototype.initApp = function (app) {
+                //注册应用程序引用
+                this._applicationDict[app.getType()] = app;
+                if (this._defaultApplication == null)
+                    this._defaultApplication = app;
+                //注册数据模型
+                var models = app.listModels();
+                for (var i in models) {
+                    this.mapSingleton(models[i]);
+                }
+                //注册模块儿
+                var modules = app.listModules();
+                for (var name in modules) {
+                    ModuleManager.registerModule(name, modules[name]);
+                }
+            };
+            /*注册单例对象*/
+            ApplicationContext.prototype.mapSingleton = function (cls) {
+                var key = cls.toString();
+                if (this._singletonDict[key] == null) {
+                    this._singletonDict[key] = new cls();
+                }
             };
             ApplicationContext.prototype.initilize = function () {
                 //初始化浏览器数据
@@ -292,6 +381,57 @@ var vox;
             };
             ApplicationContext.prototype.removeListener = function (type, handler) {
                 EventUtil.removeEventHandler(this._dispatcher, type, handler);
+            };
+            ApplicationContext.prototype.dispatch = function (typeOrEvent) {
+                var args = [];
+                for (var _i = 1; _i < arguments.length; _i++) {
+                    args[_i - 1] = arguments[_i];
+                }
+                if (typeOrEvent == null)
+                    return;
+                var type;
+                if (typeof typeOrEvent == 'string') {
+                    type = typeOrEvent;
+                }
+                else {
+                    var evt = typeOrEvent;
+                    type = evt.type;
+                    args = [evt];
+                }
+                //生成command并执行
+                var commandClasses = this._commondDict[type];
+                var commandArgs = args.concat();
+                for (var i in commandClasses) {
+                    var commandClass = commandClasses[i];
+                    if (commandClass != null) {
+                        var cmd = new commandClass();
+                        cmd.context = this;
+                        cmd.external = this._external;
+                        cmd.systemConfig = this._systemConfig;
+                        cmd.type = type;
+                        cmd.parameters = commandArgs;
+                        cmd.exec();
+                    }
+                }
+                //调用单例对象对应方法
+                for (var i in this._singletonDict) {
+                    var singleton = this._singletonDict[i];
+                    var handler = singleton[type + "_handler"];
+                    if ($.isFunction(handler)) {
+                        handler.apply(singleton, args);
+                    }
+                }
+                //调用中介者对应方法
+                for (var i in this._mediatorList) {
+                    var mediator = this._mediatorList[i];
+                    var handler = mediator[type + "_handler"];
+                    if ($.isFunction(handler))
+                        handler.apply(mediator, args);
+                }
+                //调用常规派发事件方法
+                //TODO 下面两行我没看懂 肖建军
+                args.unshift(this._dispatcher, type);
+                EventUtil.dispatchEvent.apply(null, args);
             };
             return ApplicationContext;
         })();
@@ -589,6 +729,7 @@ var vox;
 (function (vox) {
     var external;
     (function (external) {
+        var LogUtils = vox.utils.LogUtils;
         /**
          * 移动端外壳基类
          */
@@ -685,7 +826,7 @@ var vox;
                         externalParams = JSON.parse(result);
                     }
                     catch (err) {
-                        vox.utils.LogUtil.log("[external getInitParams] json\u89E3\u6790\u5931\u8D25: " + err);
+                        LogUtils.log("[external getInitParams] json\u89E3\u6790\u5931\u8D25: " + err);
                         vox.manager.PopupManager.alert("\u83B7\u53D6\u521D\u59CB\u53C2\u6570\u5931\u8D25: " + err);
                     }
                     vox.utils.ObjectUtil.extendObject(params, externalParams);
@@ -1203,6 +1344,217 @@ var vox;
             return ExternalEventManager;
         })();
         manager.ExternalEventManager = ExternalEventManager;
+    })(manager = vox.manager || (vox.manager = {}));
+})(vox || (vox = {}));
+var vox;
+(function (vox) {
+    var manager;
+    (function (manager) {
+        var ContextManager = vox.context.ContextManager;
+        var EnvCode = vox.system.EnvCode;
+        var LogUtils = vox.utils.LogUtils;
+        var LogLevel = vox.utils.LogLevel;
+        var AppEvent = vox.events.AppEvent;
+        var ModuleManager = (function () {
+            function ModuleManager() {
+            }
+            ModuleManager.initialize = function (proxy) {
+                ModuleManager._proxy = proxy;
+            };
+            /**获取默认模块儿名(第一个注册的模块儿)
+             * @return {string}*/
+            ModuleManager.getDefaultModule = function () {
+                return ModuleManager._defaultModuleName;
+            };
+            /*把模块类 和 名字 注册到_moduleClasses里面*/
+            ModuleManager.registerModule = function (moduleName, moduleClazz) {
+                if (ModuleManager._defaultModuleName == null)
+                    this._defaultModuleName = moduleName;
+                ModuleManager._moduleClasses[moduleName] = moduleClazz;
+            };
+            /*模块儿是否在活动中
+            * @param moduleName
+            * @return {boolean} 表示是否正在活动*/
+            ModuleManager.isActive = function (moduleName) {
+                var result = (ModuleManager._activeModuleDict[moduleName] != null || ModuleManager._loadingModuleDict[moduleName] != null);
+                return result;
+            };
+            /*获取当前模块，其实是最后一个*/
+            ModuleManager.getCurModule = function () {
+                return ModuleManager._activeModuleList[ModuleManager._activeModuleList.length - 1];
+            };
+            /*活动模块的个数*/
+            ModuleManager.getActiveCount = function () {
+                return this._activeModuleList.length;
+            };
+            /*使用模块名称显示模块
+            * @param moduleName 模块儿名称
+            * @param data 可能的数据*/
+            ModuleManager.showModule = function (moduleName, data) {
+                var _this = this;
+                if (moduleName == null)
+                    return;
+                var moduleClass = ModuleManager._moduleClasses[moduleName];
+                if (moduleClass == null)
+                    return;
+                //如果这个模块已经开启，则不进行操作
+                if (ModuleManager.isActive(moduleName))
+                    return;
+                //获取模块对象
+                //TODO 没有想清楚 loadFlag的意义
+                var loadFlag = true;
+                ModuleManager._proxy.getModule(moduleName, moduleClass, function (thisModule) {
+                    //初始化模块
+                    var context = ContextManager.context;
+                    if (context.getSystemConfig().envCode == EnvCode.dev) {
+                        thisModule.__initialize();
+                    }
+                    else {
+                        try {
+                            thisModule.__initialize();
+                        }
+                        catch (err) {
+                            LogUtils.log(err.toString(), LogLevel.Err);
+                        }
+                    }
+                    //获取上一个模块
+                    ModuleManager._lastModule = _this.getCurModule();
+                    ModuleManager._lastData = data;
+                    var lastModule = ModuleManager._lastModule;
+                    //放入活动模块儿表
+                    ModuleManager._activeModuleDict[moduleName] = thisModule;
+                    ModuleManager._activeModuleList.push(thisModule);
+                    //发送准备切换模块儿事件
+                    ContextManager.context.dispatch(AppEvent.Evt_PreChangeModule, thisModule, ModuleManager._lastModule);
+                    //调用show方法
+                    if (context.getSystemConfig().envCode === EnvCode.dev) {
+                        thisModule.setShowHandler(function () {
+                            thisModule.onActivate(ModuleManager._lastModule, ModuleManager._lastData);
+                        });
+                        thisModule.show(data);
+                    }
+                    else {
+                        try {
+                            thisModule.setShowHandler(function () {
+                                try {
+                                    thisModule.onActivate(ModuleManager._lastModule, ModuleManager._lastData);
+                                }
+                                catch (err) {
+                                    LogUtils.log(err.toString(), LogLevel.Err);
+                                }
+                            });
+                            thisModule.show(data);
+                        }
+                        catch (err) {
+                            LogUtils.log(err.toString(), LogLevel.Err);
+                        }
+                    }
+                    //发送切换模块儿事件
+                    ContextManager.context.dispatch(AppEvent.Evt_ChangeModule, thisModule, lastModule);
+                    if (!loadFlag) {
+                        ContextManager.context.dispatch(AppEvent.Evt_LoadModuleComplete, moduleName, data);
+                    }
+                    loadFlag = false;
+                });
+                if (loadFlag) {
+                    loadFlag = false;
+                    ContextManager.context.dispatch(AppEvent.Evt_StartLoadModule, moduleName, data);
+                }
+            };
+            /*关闭模块
+            * 先pureClose
+            * 再发送切换模块事件
+            * 然后 TODO 后面做了什么?
+            * @param moduleName 模块儿的名称
+            * @param data 可能的数据*/
+            ModuleManager.closeModule = function (moduleName, data) {
+                ModuleManager._lastModule = this.getCurModule();
+                ModuleManager._lastData = data;
+                //取到活动模块儿表中的内容
+                var module = ModuleManager.pureClose(moduleName, data);
+                if (module != null) {
+                    //获取最新模块儿
+                    var curModule = this.getCurModule();
+                    //发送准备切换模块儿事件  新的Module 老的Module
+                    ContextManager.context.dispatch(AppEvent.Evt_PreChangeModule, curModule, module);
+                    //发送切换模块儿事件
+                    ContextManager.context.dispatch(AppEvent.Evt_ChangeModule, curModule, module);
+                }
+            };
+            /*退回到指定模块儿
+            * @param moduleName 要退回到的模块名称
+            * @param data 可能的数据
+            * @param {boolean} 如果找到了模块返回true, 没有找到返回false*/
+            ModuleManager.backToModule = function (moduleName, data) {
+                //取到活动模块儿表中的内容
+                var module = ModuleManager._activeModuleDict[moduleName];
+                if (module == null)
+                    return false;
+                //首先将当前模块儿和目标模块儿之间的所有模块儿关闭
+                var tempList = ModuleManager._activeModuleList.concat();
+                var index = tempList.indexOf(module);
+                for (var i = tempList.length - 2; i > index; i--) {
+                    var tmpModule = tempList[i];
+                    ModuleManager.pureClose(tmpModule.getName(), data);
+                }
+                //然后正常关闭当前模块
+                var curModule = tempList[tempList.length - 1];
+                ModuleManager.closeModule(curModule.getName(), data);
+                return true;
+            };
+            //---------------------------内部工具方法-----------------------------------
+            /*单纯只是为了关闭
+            * 1 执行setCloseHandler dispose
+            * 2 从活动列表中清除*/
+            ModuleManager.pureClose = function (moduleName, data) {
+                //取到活动模块儿表中的内容
+                var module = ModuleManager._activeModuleDict[moduleName];
+                if (module != null) {
+                    //关闭模块
+                    var context = ContextManager.context;
+                    if (context.getSystemConfig().envCode === EnvCode.dev) {
+                        //开发环境不使用try catch，防止查找错误麻烦
+                        module.setCloseHandler(function () {
+                            //销毁当前模块
+                            module.dispose();
+                        });
+                        module.close(data);
+                    }
+                    else {
+                        try {
+                            module.setCloseHandler(function () {
+                                try {
+                                    module.dispose();
+                                }
+                                catch (err) {
+                                    LogUtils.log(err.toString(), LogLevel.Err);
+                                }
+                            });
+                            module.close(data);
+                        }
+                        catch (err) {
+                            LogUtils.log(err.toString(), LogLevel.Err);
+                        }
+                    }
+                    //从活动模块中移除
+                    delete ModuleManager._activeModuleDict[moduleName];
+                    ModuleManager._activeModuleList.splice(ModuleManager._activeModuleList.indexOf(module), 1);
+                }
+                return module;
+            };
+            ModuleManager._lastModule = null;
+            ModuleManager._lastData = null;
+            /**名字 对应ModuleClass*/
+            ModuleManager._moduleClasses = {};
+            /**active 名字 对应 Module*/
+            ModuleManager._activeModuleDict = {};
+            /**active 名字 对应 IModule*/
+            ModuleManager._activeModuleList = [];
+            /**正在加载的Module的名字*/
+            ModuleManager._loadingModuleDict = {};
+            return ModuleManager;
+        })();
+        manager.ModuleManager = ModuleManager;
     })(manager = vox.manager || (vox.manager = {}));
 })(vox || (vox = {}));
 var vox;

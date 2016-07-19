@@ -1,5 +1,5 @@
 namespace vox.context{
-    import CommandClazz = vox.command.CommandClazz;
+    import CommandClazz = vox.command.ICommandClazz;
     import Mediator = vox.mediator.Mediator;
     import IResponseHandler = vox.intefaces.IResponseHandler;
     import IExternal = vox.external.IExternal;
@@ -13,6 +13,13 @@ namespace vox.context{
     import IEventHandler = vox.intefaces.IEventHandler;
     import EventUtil = vox.utils.EventUtil;
     import AppEvent = vox.events.AppEvent;
+    import ModuleManager = vox.manager.ModuleManager;
+    import BaseCommand = vox.command.BaseCommand;
+    import ICommandClazz = vox.command.ICommandClazz;
+    import IMediatorHandler = vox.mediator.IMediatorHandler;
+    import Mediator = vox.mediator.Mediator;
+    import IMediatorHandler = vox.mediator.IMediatorHandler;
+    import EventUtil = vox.events.EventUtil;
 
     interface IResponseData{
         handler:IResponseHandler ;
@@ -21,7 +28,16 @@ namespace vox.context{
 
     export class ContextManager{
         /**静态获取ApplicationContext的方式*/
-        public static context:ApplicationContext ;
+        public static context:ApplicationContext = new ApplicationContext();
+        private static _apps:Application[] ;
+        /*初始化Freedom Evolve框架*/
+        public static initialize( ...apps:Application[]):void{
+            ContextManager._apps = apps ;
+            for( var i in apps ){
+                ContextManager.context
+            }
+        }
+
     }
 
     export class ApplicationContext{
@@ -83,6 +99,32 @@ namespace vox.context{
         public constructor()
         {
 
+        }
+
+        public initApp( app:Application ):void{
+            //注册应用程序引用
+            this._applicationDict[ app.getType() ] = app ;
+            if( this._defaultApplication == null ) this._defaultApplication = app ;
+
+            //注册数据模型
+            var models:IClass[] = app.listModels() ;
+            for( var i in models ){
+                this.mapSingleton( models[i]) ;
+            }
+
+            //注册模块儿
+            var modules:Object = app.listModules() ;
+            for( var name in modules ){
+                ModuleManager.registerModule( name, modules[name]);
+            }
+        }
+
+        /*注册单例对象*/
+        public mapSingleton( cls:IClass ):void{
+            var key:string = cls.toString() ;
+            if( this._singletonDict[key] == null ){
+                this._singletonDict[key] = new cls();
+            }
         }
 
         public initilize():void
@@ -277,5 +319,58 @@ namespace vox.context{
 
         /**监听消息协议返回*/
 
+        public dispatch( type:string, ...args):void ;
+
+        public dispatch( event:Event ):void
+
+        public dispatch( typeOrEvent:any, ...args ):void
+        {
+            if( typeOrEvent == null ) return ;
+            var type:string ;
+            if( typeof typeOrEvent == 'string'){
+                type = typeOrEvent as string ;
+            }else{
+                var evt:Event = typeOrEvent as Event ;
+                type = evt.type ;
+                args = [ evt ] ;
+            }
+
+            //生成command并执行
+            var commandClasses:ICommandClazz[] = this._commondDict[ type ] ;
+            var commandArgs:any[] = args.concat() ;
+            for( var i in commandClasses ){
+                var commandClass:ICommandClazz = commandClasses[i];
+                if( commandClass != null ){
+                    var cmd:BaseCommand = new commandClass();
+                    cmd.context = this ;
+                    cmd.external = this._external ;
+                    cmd.systemConfig = this._systemConfig ;
+                    cmd.type = type ;
+                    cmd.parameters = commandArgs ;
+                    cmd.exec() ;
+                }
+            }
+
+            //调用单例对象对应方法
+            for( var i in this._singletonDict ){
+                var singleton:any = this._singletonDict[i];
+                var handler:IMediatorHandler = singleton[type + "_handler"] ;
+                if( $.isFunction( handler ) ) {
+                    handler.apply(singleton, args ) ;
+                }
+            }
+
+            //调用中介者对应方法
+            for( var i in this._mediatorList ){
+                var mediator:Mediator = this._mediatorList[i];
+                var handler:IMediatorHandler = mediator[type + "_handler"] ;
+                if( $.isFunction( handler ) ) handler.apply( mediator, args ) ;
+            }
+
+            //调用常规派发事件方法
+            //TODO 下面两行我没看懂 肖建军
+            args.unshift( this._dispatcher, type ) ;
+            EventUtil.dispatchEvent.apply( null, args ) ;
+        }
     }
 }
