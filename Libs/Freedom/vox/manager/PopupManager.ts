@@ -70,7 +70,7 @@ namespace vox.manager{
             //调用弹出策略
             policy.show( popup, popup.onAfterShow.bind(popup), from ) ;
             //如果是模态，则需要遮罩层
-            if( isModal ) MaskUtil //TODO
+            if( isModal ) MaskUtil.showModalMask(popup) ; //TODO
             //派发事件
             ContextManager.context.dispatch( AppEvent.Evt_ShowPopup , popup ) ;
 
@@ -109,7 +109,7 @@ namespace vox.manager{
 
             //移除遮罩
             //TODO
-            MaskUtil
+            MaskUtil.hideModalMask( popup );
 
             //派发事件
             ContextManager.context.dispatch( AppEvent.Evt_ClosePopup ) ;

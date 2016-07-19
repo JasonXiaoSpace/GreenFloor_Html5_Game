@@ -1627,7 +1627,7 @@ var vox;
                 policy.show(popup, popup.onAfterShow.bind(popup), from);
                 //如果是模态，则需要遮罩层
                 if (isModal)
-                    MaskUtil; //TODO
+                    MaskUtil.showModalMask(popup); //TODO
                 //派发事件
                 ContextManager.context.dispatch(AppEvent.Evt_ShowPopup, popup);
             };
@@ -1664,7 +1664,7 @@ var vox;
                     PopupManager._popupList.splice(index, 1);
                 //移除遮罩
                 //TODO
-                MaskUtil;
+                MaskUtil.hideModalMask(popup);
                 //派发事件
                 ContextManager.context.dispatch(AppEvent.Evt_ClosePopup);
             };
@@ -2444,6 +2444,7 @@ var vox;
 (function (vox) {
     var utils;
     (function (utils) {
+        var MaskUtil = vox.net.MaskUtil;
         var MaskUtil = (function () {
             function MaskUtil() {
             }
@@ -2461,6 +2462,32 @@ var vox;
             MaskUtil.isShowingLoading = function () {
                 if (MaskUtil._entity != null)
                     return MaskUtil._entity.isShowingLoading();
+                return false;
+            };
+            MaskUtil.showMask = function (alpha) {
+                if (MaskUtil._entity != null)
+                    MaskUtil._entity.showMask(alpha);
+            };
+            MaskUtil.hideMask = function () {
+                if (MaskUtil._entity != null)
+                    MaskUtil._entity.hideMask();
+            };
+            MaskUtil.isShowingMask = function () {
+                if (MaskUtil._entity != null)
+                    return MaskUtil._entity.isShowingMask();
+                return false;
+            };
+            MaskUtil.showModalMask = function (popup, alpha) {
+                if (MaskUtil._entity != null)
+                    MaskUtil._entity.showModalMask(popup, alpha);
+            };
+            MaskUtil.hideModalMask = function (popup) {
+                if (MaskUtil._entity != null)
+                    MaskUtil._entity.hideModalMask(popup);
+            };
+            MaskUtil.isShowingModalMask = function (popup) {
+                if (MaskUtil._entity != null)
+                    return MaskUtil._entity.isShowingModalMask(popup);
                 return false;
             };
             return MaskUtil;
