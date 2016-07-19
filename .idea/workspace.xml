@@ -2,11 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="fdbed51f-bd30-425c-9563-58b21abccb03" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/manager/SceneManager.ts" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/scene/IScene.ts" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/scene/IScenePolicy.ts" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/scene/policies/NoneScenePolicy.ts" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Libs/Freedom/vox/Freedom.js" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/Freedom.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Libs/Freedom/vox/Freedom.js.map" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/Freedom.js.map" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Libs/Freedom/vox/manager/PopupManager.ts" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/manager/PopupManager.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Libs/Freedom/vox/utils/MaskUtil.ts" afterPath="$PROJECT_DIR$/Libs/Freedom/vox/utils/MaskUtil.ts" />
     </list>
     <ignored path="jason_lib.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -40,11 +42,51 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="PopupManager.ts" pinned="false" current-in-tab="true">
+      <file leaf-file-name="PopupManager.ts" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/manager/PopupManager.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.63235295">
-              <caret line="111" column="44" selection-start-line="111" selection-start-column="44" selection-end-line="111" selection-end-column="44" />
+            <state vertical-scroll-proportion="-1.6333333">
+              <caret line="98" column="22" selection-start-line="98" selection-start-column="22" selection-end-line="98" selection-end-column="22" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SceneManager.ts" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/manager/SceneManager.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.42987806">
+              <caret line="98" column="31" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="IScene.ts" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/scene/IScene.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="IScenePolicy.ts" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/scene/IScenePolicy.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="21" column="68" selection-start-line="5" selection-start-column="7" selection-end-line="21" selection-end-column="68" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NoneScenePolicy.ts" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/scene/policies/NoneScenePolicy.ts">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-8.932203">
+              <caret line="31" column="18" selection-start-line="31" selection-start-column="18" selection-end-line="31" selection-end-column="18" />
               <folding />
             </state>
           </provider>
@@ -58,10 +100,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Libs/Freedom/vox/external/External.ts" />
-        <option value="$PROJECT_DIR$/Libs/Freedom/vox/mediator/IMediatorHandler.ts" />
-        <option value="$PROJECT_DIR$/Libs/Freedom/vox/interfaces/Disposable.ts" />
-        <option value="$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IExecutable.ts" />
         <option value="$PROJECT_DIR$/Libs/Freedom/vox/interfaces/ResponseHandler.ts" />
         <option value="$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IResponseHandler.ts" />
         <option value="$PROJECT_DIR$/Libs/Freedom/vox/interfaces/ISkinableClass.ts" />
@@ -109,6 +147,10 @@
         <option value="$PROJECT_DIR$/Libs/Freedom/vox/events/AppEvent.ts" />
         <option value="$PROJECT_DIR$/Libs/Freedom/vox/utils/MaskUtil.ts" />
         <option value="$PROJECT_DIR$/Libs/Freedom/vox/manager/PopupManager.ts" />
+        <option value="$PROJECT_DIR$/Libs/Freedom/vox/scene/IScene.ts" />
+        <option value="$PROJECT_DIR$/Libs/Freedom/vox/scene/IScenePolicy.ts" />
+        <option value="$PROJECT_DIR$/Libs/Freedom/vox/scene/policies/NoneScenePolicy.ts" />
+        <option value="$PROJECT_DIR$/Libs/Freedom/vox/manager/SceneManager.ts" />
       </list>
     </option>
   </component>
@@ -122,9 +164,9 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="-26" />
-    <option name="y" value="468" />
+    <option name="y" value="510" />
     <option name="width" value="1698" />
-    <option name="height" value="542" />
+    <option name="height" value="500" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -368,6 +410,20 @@
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="Project">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="jason_lib">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
             <PATH_ELEMENT USER_OBJECT="Libs">
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
@@ -416,7 +472,7 @@
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="popup">
+            <PATH_ELEMENT USER_OBJECT="scene">
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
             </PATH_ELEMENT>
@@ -442,11 +498,37 @@
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="popup">
+            <PATH_ELEMENT USER_OBJECT="scene">
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
             </PATH_ELEMENT>
             <PATH_ELEMENT USER_OBJECT="policies">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="jason_lib">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="Libs">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="Freedom">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="vox">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="popup">
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
             </PATH_ELEMENT>
@@ -581,12 +663,12 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-26" y="468" width="1698" height="542" extended-state="0" />
+    <frame x="-26" y="510" width="1698" height="500" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25445896" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="TypeScript Compiler" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.01724138" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="TypeScript Compiler" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.01923077" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.054945055" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -633,34 +715,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IClass.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="5" column="1" selection-start-line="5" selection-start-column="1" selection-end-line="5" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IDisposable.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="4" column="1" selection-start-line="4" selection-start-column="1" selection-end-line="4" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IEventHandler.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="1" column="34" selection-start-line="1" selection-start-column="21" selection-end-line="1" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IExecutable.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.041262135">
-          <caret line="2" column="23" selection-start-line="2" selection-start-column="23" selection-end-line="2" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/interfaces/IResponseHandler.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.061893202">
@@ -999,10 +1053,42 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/scene/policies/NoneScenePolicy.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-8.932203">
+          <caret line="31" column="18" selection-start-line="31" selection-start-column="18" selection-end-line="31" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/scene/IScenePolicy.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="21" column="68" selection-start-line="5" selection-start-column="7" selection-end-line="21" selection-end-column="68" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/scene/IScene.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/manager/PopupManager.ts">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.63235295">
-          <caret line="111" column="44" selection-start-line="111" selection-start-column="44" selection-end-line="111" selection-end-column="44" />
+        <state vertical-scroll-proportion="-1.6333333">
+          <caret line="98" column="22" selection-start-line="98" selection-start-column="22" selection-end-line="98" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Libs/Freedom/vox/manager/SceneManager.ts">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.42987806">
+          <caret line="98" column="31" selection-start-line="98" selection-start-column="31" selection-end-line="98" selection-end-column="31" />
           <folding />
         </state>
       </provider>
